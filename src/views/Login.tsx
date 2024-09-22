@@ -1,6 +1,5 @@
-// src/views/Login.tsx
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useNavigation, NavigationProp, ParamListBase } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { signIn } from '../backend/auth';
@@ -14,7 +13,6 @@ const Login = () => {
     try {
       await signIn(email, password);
       Alert.alert('Sucesso', 'Login realizado com sucesso');
-      // Redirecionar para a tela home
       navigation.navigate('Home');
     } catch (error) {
       if (error instanceof Error) {
@@ -26,58 +24,63 @@ const Login = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Faça seu login</Text>
-      <Image source={require('../../assets/login.png')} style={styles.image} />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={styles.container}>
+          <Text style={styles.title}>Faça seu login</Text>
+          <Image source={require('../../assets/login.png')} style={styles.image} />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
 
-      <TouchableOpacity 
-        style={styles.buttonContainer} 
-        onPress={handleLogin}
-      >
-        <LinearGradient 
-          // Alterado para um gradiente verde ciano sólido
-          colors={['#00C2BB', '#008B00']} 
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.button}
-        >
-          <Text style={styles.buttonText}>Login</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.buttonContainer} 
+            onPress={handleLogin}
+          >
+            <LinearGradient 
+              colors={['#00C2BB', '#008B00']} 
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>Login</Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.buttonContainer} 
-        onPress={() => navigation.navigate('Cadastro')}
-      >
-        <LinearGradient 
-         // Alterado para um gradiente verde ciano sólido
-          colors={['#00C2BB', '#008B00']} 
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.button}
-        >
-          <Text style={styles.buttonText}>Ainda não é Cadastrado?</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.buttonContainer} 
+            onPress={() => navigation.navigate('Cadastro')}
+          >
+            <LinearGradient 
+              colors={['#00C2BB', '#008B00']} 
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>Ainda não é Cadastrado?</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Seu app de Pesquisa de Preços</Text>
-        <Text style={styles.footerText}>© 2024 Preço Certo. Todos os direitos reservados.</Text>
-      </View>
-    </View>
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Seu app de Pesquisa de Preços</Text>
+          <Text style={styles.footerText}>© 2024 Preço Certo. Todos os direitos reservados.</Text>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -121,15 +124,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   footer: {
-    position: 'absolute',
-    bottom: 20,
     alignItems: 'center',
     width: '100%',
+    marginBottom: 10,
+    backgroundColor: '#f8f8f8',
   },
   footerText: {
     fontSize: 14,
     color: '#999',
-    marginBottom: 10,
   },
 });
 

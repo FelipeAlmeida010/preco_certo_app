@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet, TextInput, TouchableOpacity, Text, Image } from 'react-native';
-import { getStorage, ref, listAll, getDownloadURL } from 'firebase/storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import ProductCard from '../components/ProductCard';
+import Carousel from '../components/Carousel'; // Importando o carrossel
+import { ref, listAll, getDownloadURL } from 'firebase/storage';
 import { storage } from '../backend/firebaseConfig';
 
 type Product = {
@@ -20,36 +21,33 @@ const Home = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [banners, setBanners] = useState<{ id: number; imageUrl: string }[]>([]);
 
-  // Imagem de perfil do usuário (substituir pelo URL real da imagem)
-  const userProfileImage = 'https://via.placeholder.com/50';
-
-  // Função para buscar as imagens dos banners no Firebase Storage
-  const fetchBannerImages = async () => {
-    try {
-      const storageRef = ref(storage, 'banners/');
-      const result = await listAll(storageRef); // Lista todos os arquivos na pasta 'banners/'
-      
-      if (result.items.length === 0) {
-        console.log("Nenhuma imagem de banner encontrada.");
-        return;
-      }
-
-      const fetchedBanners = await Promise.all(
-        result.items.map(async (itemRef, index) => {
-          const imageUrl = await getDownloadURL(itemRef);
-          return { id: index + 1, imageUrl }; // Gera URL pública para cada imagem
-        })
-      );
-
-      setBanners(fetchedBanners);
-    } catch (error) {
-      console.error('Erro ao buscar as imagens dos banners:', error);
-    }
-  };
+  const userProfileImage = 'https://via.placeholder.com/50'; // Imagem de perfil temporária
 
   useEffect(() => {
-    // Função para buscar as imagens dos produtos
-    const fetchImages = async () => {
+    const fetchBannerImages = async () => {
+      try {
+        const storageRef = ref(storage, 'banners/');
+        const result = await listAll(storageRef);
+
+        if (result.items.length === 0) {
+          console.log("Nenhuma imagem de banner encontrada.");
+          return;
+        }
+
+        const fetchedBanners = await Promise.all(
+          result.items.map(async (itemRef, index) => {
+            const imageUrl = await getDownloadURL(itemRef);
+            return { id: index + 1, imageUrl };
+          })
+        );
+
+        setBanners(fetchedBanners);
+      } catch (error) {
+        console.error('Erro ao buscar as imagens dos banners:', error);
+      }
+    };
+
+    const fetchProductImages = async () => {
       try {
         const storageRef = ref(storage, 'images/');
         const result = await listAll(storageRef);
@@ -61,30 +59,28 @@ const Home = () => {
 
         const fetchedProducts: Product[] = await Promise.all(
           result.items.map(async (itemRef, index) => {
-            const imageUrl = await getDownloadURL(itemRef); // Gera URL pública para cada imagem de produto
+            const imageUrl = await getDownloadURL(itemRef);
             return {
               id: index + 1,
-              description: `Produto ${index + 1}`, // Aqui você pode customizar as descrições
+              description: `Produto ${index + 1}`,
               imageUrl,
             };
           })
         );
 
         setProducts(fetchedProducts);
-        setFilteredProducts(fetchedProducts); // Exibe todos os produtos inicialmente
+        setFilteredProducts(fetchedProducts);
       } catch (error) {
-        console.error('Erro ao buscar as imagens:', error);
+        console.error('Erro ao buscar as imagens dos produtos:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    // Busca banners e produtos
     fetchBannerImages();
-    fetchImages();
+    fetchProductImages();
   }, []);
 
-  // Filtrar produtos com base na barra de busca
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (query.length > 0) {
@@ -93,11 +89,10 @@ const Home = () => {
       );
       setFilteredProducts(filtered);
     } else {
-      setFilteredProducts(products); // Restaura a lista completa se a barra de busca estiver vazia
+      setFilteredProducts(products);
     }
   };
 
-  // Funções de adicionar e remover produtos
   const handleAdd = (id: number) => {
     console.log(`Adicionar produto com id: ${id}`);
   };
@@ -106,14 +101,9 @@ const Home = () => {
     console.log(`Remover produto com id: ${id}`);
   };
 
-  // Renderiza cada banner
-  const renderBannerItem = ({ item }: { item: { id: number; imageUrl: string } }) => (
-    <Image source={{ uri: item.imageUrl }} style={styles.banner} />
-  );
-
   return (
     <View style={styles.container}>
-      {/* Header com Barra de Busca, Menu Sanduíche, Imagem de Perfil e Carrinho */}
+      {/* Cabeçalho */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => setMenuVisible(!menuVisible)}>
           <MaterialIcons name="menu" size={30} color="#000" />
@@ -136,7 +126,7 @@ const Home = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Menu Sanduíche */}
+      {/* Menu de Categorias */}
       {menuVisible && (
         <View style={styles.menu}>
           {categories.map((category, index) => (
@@ -149,41 +139,34 @@ const Home = () => {
 
       {/* Carrossel de Banners */}
       {banners.length > 0 ? (
-        <FlatList
-          data={banners}
-          renderItem={renderBannerItem}
-          keyExtractor={item => item.id.toString()}
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}
-          pagingEnabled={true}  // Funciona como um carrossel
-          style={{ marginVertical: 20 }}  // Estilização para o carrossel
-        />
+        <Carousel banners={banners} loading={loading} />
       ) : (
         <Text style={{ textAlign: 'center', marginTop: 20 }}>Carregando banners...</Text>
       )}
 
       {/* Lista de Produtos */}
-      {loading ? (
-        <View style={styles.loading}>
-          <Text>Carregando produtos...</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredProducts}
-          renderItem={({ item }) => (
-            <ProductCard
-              key={item.id}
-              id={item.id}
-              description={item.description}
-              imageUrl={item.imageUrl}
-              onAdd={handleAdd}
-              onRemove={handleRemove}
-            />
-          )}
-          keyExtractor={item => item.id.toString()}
-          numColumns={2}
-        />
-      )}
+      <FlatList
+        data={filteredProducts}
+        renderItem={({ item }) => (
+          <ProductCard
+            key={item.id}
+            id={item.id}
+            description={item.description}
+            imageUrl={item.imageUrl}
+            onAdd={handleAdd}
+            onRemove={handleRemove}
+          />
+        )}
+        keyExtractor={item => item.id.toString()}
+        numColumns={2} // Exibe 2 cards por linha
+        contentContainerStyle={{ flexGrow: 1 }}
+      />
+
+      {/* Rodapé Fixo */}
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>Seu app de Pesquisa de Preços</Text>
+        <Text style={styles.footerText}>© 2024 Preço Certo. Todos os direitos reservados.</Text>
+      </View>
     </View>
   );
 };
@@ -191,6 +174,7 @@ const Home = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: 'space-between', // Garante que o conteúdo da tela ocupe o espaço entre o cabeçalho e o rodapé
   },
   header: {
     flexDirection: 'row',
@@ -221,16 +205,14 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 18,
   },
-  banner: {
-    width: '100%',
-    height: 200,
-    resizeMode: 'cover',
-    marginBottom: 10,
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
+  footer: {
     alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#f8f8f8',
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#999',
   },
 });
 
