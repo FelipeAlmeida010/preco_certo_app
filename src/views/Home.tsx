@@ -154,7 +154,6 @@ const Home = () => {
             description={item.description}
             imageUrl={item.imageUrl}
             onAdd={handleAdd}
-            onRemove={handleRemove}
           />
         )}
         keyExtractor={item => item.id.toString()}

@@ -1,24 +1,22 @@
 // src/components/ProductCard.tsx
 import React from 'react';
-import { View, Text, Image, Button, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 
 interface ProductCardProps {
   id: number;
   description: string;
   imageUrl: string;
   onAdd: (id: number) => void;
-  onRemove: (id: number) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ id, description, imageUrl, onAdd, onRemove }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ id, description, imageUrl, onAdd }) => {
   return (
     <View style={styles.card}>
       <Image source={{ uri: imageUrl }} style={styles.image} />
       <Text style={styles.description}>{description}</Text>
-      <View style={styles.buttonContainer}>
-        <Button title="Add" onPress={() => onAdd(id)} />
-        <Button title="Remove" onPress={() => onRemove(id)} />
-      </View>
+      <TouchableOpacity style={styles.addButton} onPress={() => onAdd(id)}>
+        <Text style={styles.addButtonText}>Adicionar item</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -28,24 +26,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 10,
-    padding: 10,
+    padding: 30,
     margin: 10,
     width: '45%',
     alignItems: 'center',
+    
   },
   image: {
     width: 100,
     height: 100,
-    marginBottom: 10,
+    marginBottom: 20,
+    
   },
   description: {
     fontSize: 14,
     marginBottom: 10,
+    textAlign: 'center',
+    color: '#333',
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+  addButton: {
+    backgroundColor: '#00C2BB',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 14,
   },
 });
 
